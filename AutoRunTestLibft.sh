@@ -112,9 +112,6 @@ testsBonus=(
     "test_ft_lstmap.out"
 )
 
-# Variable pour inclure les tests bonus
-include_bonus=false
-
 # Demander le mode d'exécution
 read -p "Do you want to run in normal mode or auto-run mode? (n/a): " mode
 case $mode in
@@ -140,6 +137,21 @@ if [ ! -d "$test_dir" ]; then
     exit 1
 fi
 
+# Demander si on veut exécuter les tests bonus
+read -p "Do you want to include bonus tests? (y/n): " choice
+case $choice in
+    y|Y)
+        include_bonus=true
+        ;;
+    n|N)
+        include_bonus=false
+        ;;
+    *)
+        echo "Invalid option. Skipping bonus tests."
+        include_bonus=false
+        ;;
+esac
+
 if [ "$mode" = "normal" ]; then
     # Exécuter chaque test individuellement avec demande de confirmation
     for test in "${tests[@]}"; do
@@ -149,29 +161,17 @@ if [ "$mode" = "normal" ]; then
         fi
     done
 
-    echo "--------------------------------"
-    echo "Start tests bonus"
-    echo "--------------------------------"
-
-    # Demander si on veut exécuter les tests bonus
-    read -p "Do you want to run bonus tests? (y/n): " choice
-    case $choice in
-        y|Y)
-            include_bonus=true
-            for test in "${testsBonus[@]}"; do
-                (cd "$test_dir" && run_test $test)
-                if [ $? -ne 0 ]; then
-                    exit 0
-                fi
-            done
-            ;;
-        n|N)
-            echo "Skipping bonus tests."
-            ;;
-        *)
-            echo "Invalid option. Skipping bonus tests."
-            ;;
-    esac
+    if [ "$include_bonus" = true ]; then
+        echo "--------------------------------"
+        echo "Start tests bonus"
+        echo "--------------------------------"
+        for test in "${testsBonus[@]}"; do
+            (cd "$test_dir" && run_test $test)
+            if [ $? -ne 0 ]; then
+                exit 0
+            fi
+        done
+    fi
 
     # Demander confirmation pour relancer tous les tests automatiquement
     read -p "Do you want to rerun all tests automatically? (y/n): " rerun_choice
