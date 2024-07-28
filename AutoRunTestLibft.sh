@@ -115,6 +115,21 @@ testsBonus=(
 # Variable pour inclure les tests bonus
 include_bonus=false
 
+# Demander le mode d'exécution
+read -p "Do you want to run in normal mode or auto-run mode? (n/a): " mode
+case $mode in
+    n|N)
+        mode="normal"
+        ;;
+    a|A)
+        mode="auto"
+        ;;
+    *)
+        echo "Invalid option. Exiting."
+        exit 1
+        ;;
+esac
+
 # Demander le répertoire des tests
 read -p "Enter the directory containing the test executables (default: ./): " test_dir
 test_dir=${test_dir:-./}
@@ -125,48 +140,53 @@ if [ ! -d "$test_dir" ]; then
     exit 1
 fi
 
-# Exécuter chaque test individuellement avec demande de confirmation
-for test in "${tests[@]}"; do
-    (cd "$test_dir" && run_test $test)
-    if [ $? -ne 0 ]; then
-        exit 0
-    fi
-done
+if [ "$mode" = "normal" ]; then
+    # Exécuter chaque test individuellement avec demande de confirmation
+    for test in "${tests[@]}"; do
+        (cd "$test_dir" && run_test $test)
+        if [ $? -ne 0 ]; then
+            exit 0
+        fi
+    done
 
-echo "--------------------------------"
-echo "Start tests bonus"
-echo "--------------------------------"
+    echo "--------------------------------"
+    echo "Start tests bonus"
+    echo "--------------------------------"
 
-# Demander si on veut exécuter les tests bonus
-read -p "Do you want to run bonus tests? (y/n): " choice
-case $choice in
-    y|Y)
-        include_bonus=true
-        for test in "${testsBonus[@]}"; do
-            (cd "$test_dir" && run_test $test)
-            if [ $? -ne 0 ]; then
-                exit 0
-            fi
-        done
-        ;;
-    n|N)
-        echo "Skipping bonus tests."
-        ;;
-    *)
-        echo "Invalid option. Skipping bonus tests."
-        ;;
-esac
+    # Demander si on veut exécuter les tests bonus
+    read -p "Do you want to run bonus tests? (y/n): " choice
+    case $choice in
+        y|Y)
+            include_bonus=true
+            for test in "${testsBonus[@]}"; do
+                (cd "$test_dir" && run_test $test)
+                if [ $? -ne 0 ]; then
+                    exit 0
+                fi
+            done
+            ;;
+        n|N)
+            echo "Skipping bonus tests."
+            ;;
+        *)
+            echo "Invalid option. Skipping bonus tests."
+            ;;
+    esac
 
-# Demander confirmation pour relancer tous les tests automatiquement
-read -p "Do you want to rerun all tests automatically? (y/n): " rerun_choice
-case $rerun_choice in
-    y|Y)
-        (cd "$test_dir" && run_all_tests)
-        ;;
-    n|N)
-        echo "Skipping rerun of all tests."
-        ;;
-    *)
-        echo "Invalid option. Skipping rerun of all tests."
-        ;;
-esac
+    # Demander confirmation pour relancer tous les tests automatiquement
+    read -p "Do you want to rerun all tests automatically? (y/n): " rerun_choice
+    case $rerun_choice in
+        y|Y)
+            (cd "$test_dir" && run_all_tests)
+            ;;
+        n|N)
+            echo "Skipping rerun of all tests."
+            ;;
+        *)
+            echo "Invalid option. Skipping rerun of all tests."
+            ;;
+    esac
+else
+    # Exécuter tous les tests automatiquement
+    (cd "$test_dir" && run_all_tests)
+fi
